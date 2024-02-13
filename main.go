@@ -57,8 +57,8 @@ func main() {
 
 	var sumMu, mu sync.RWMutex
 	var count, sum, min, max, totalViewCount uint64
-	durs := make(chan time.Duration)
-	sums := make(chan uint64)
+	durs := make(chan time.Duration, 100000)
+	sums := make(chan uint64, 100000)
 
 	go func() {
 		for s := range sums {
@@ -107,15 +107,16 @@ func main() {
 	}()
 
 	var conns []driver.Conn
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		conn, err := connect()
 		if err != nil {
-			panic((err))
+			panic(err)
 		}
 		conns = append(conns, conn)
 	}
 
-	for i := 0; i < 100; i++ {
+	queriesNumber := 1
+	for i := 0; i < queriesNumber; i++ {
 		go func() {
 			n := rand.Intn(len(queries))
 			time.Sleep(time.Duration(rand.Intn(5000)) * time.Millisecond)
@@ -138,7 +139,7 @@ func main() {
 func makeQueries(ctx context.Context, conn driver.Conn, n int) uint64 {
 
 	_, err := conn.Query(ctx, queries[n])
-	//_, err := conn.Query(ctx, queries[n])
+	//rows, err := conn.Query(ctx, queries[0])
 	//_, err := conn.Query(ctx, simpleQuery)
 	if err != nil {
 		//log.Fatal(err)
@@ -149,17 +150,17 @@ func makeQueries(ctx context.Context, conn driver.Conn, n int) uint64 {
 	var sum uint64
 	//for rows.Next() {
 	//	var (
-	//		device_type string
-	//		view_count  uint64
+	//		deviceType string
+	//		view_count uint64
 	//	)
 	//	if err := rows.Scan(
-	//		&device_type,
+	//		&deviceType,
 	//		&view_count,
 	//	); err != nil {
 	//		log.Fatal(err)
 	//	}
 	//	sum += view_count
-	//	//log.Printf("device_type: %s, view_count: %v", device_type, view_count)
+	//	log.Printf("deviceType: %s, view_count: %v", deviceType, view_count)
 	//}
 	//log.Printf("sum: %d", sum)
 	return sum
